@@ -1,0 +1,43 @@
+version: "3"
+services:
+
+  jenkins-master:
+    image: "jenkins/jenkins:lts"
+    ports:
+      - "8080:8080"
+      - "5000:5000"
+    environment:
+      - JENKINS_SLAVE_AGENT_PORT=5000
+    volumes:
+      - jenkins-master-volume:/var/jenkins_home
+
+  jenkins-slave1:
+    image: "engcpp/base-image:latest"
+    links:
+      - jenkins-master
+    volumes:
+      - jenkins-slave1-volume:/var/jenkins_home
+      - "./tools/agent.jar:/opt/tools/agent.jar"
+    command: |
+      java -jar /opt/tools/agent.jar
+      -jnlpUrl http://jenkins-master:8080/computer/slave1/slave-agent.jnlp
+      -secret ${SLAVE1_SECRET}
+      -workDir "/var/jenkins_home/workspace"
+
+  jenkins-slave2:
+    image: "engcpp/base-image:latest"
+    links:
+      - jenkins-master
+    volumes:
+      - jenkins-slave2-volume:/var/jenkins_home
+      - "./tools/agent.jar:/opt/tools/agent.jar"
+    command: |
+      java -jar /opt/tools/agent.jar
+      -jnlpUrl http://jenkins-master:8080/computer/slave2/slave-agent.jnlp
+      -secret ${SLAVE2_SECRET}
+      -workDir "/var/jenkins_home/workspace"
+
+volumes:
+  jenkins-master-volume:
+  jenkins-slave1-volume:
+  jenkins-slave2-volume:
